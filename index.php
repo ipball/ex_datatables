@@ -8,7 +8,7 @@
   <script src="media/js/jquery.dataTables.js" type="text/javascript"></script>
   <style media="screen">
     .content{
-      width: 800px;
+      width: 900px;
       margin:0 auto;
       padding: 10px;
       border: 1px solid #999;
@@ -30,12 +30,8 @@
       </thead>
       <tfoot>
         <tr>
-          <th>First name</th>
-          <th>Last name</th>
-          <th>Position</th>
-          <th>Office</th>
-          <th>Start date</th>
-          <th>Salary</th>
+          <th colspan="4" align="right">Total : </th>
+          <th colspan="2"></th>
         </tr>
       </tfoot>
     </table>
@@ -46,7 +42,39 @@
     $('#example').DataTable( {
       "processing": true,
       "serverSide": true,
-      "ajax": "server_processing.php"
+      "ajax": "server_processing.php",
+      "footerCallback": function ( row, data, start, end, display ) {
+            var api = this.api(), data;
+
+            // Remove the formatting to get integer data for summation
+            var intVal = function ( i ) {
+                return typeof i === 'string' ?
+                    i.replace(/[\$,]/g, '')*1 :
+                    typeof i === 'number' ?
+                        i : 0;
+            };
+
+            // Total over all pages
+            total = api
+                .column( 5 )
+                .data()
+                .reduce( function (a, b) {
+                    return intVal(a) + intVal(b);
+                }, 0 );
+
+            // Total over this page
+            pageTotal = api
+                .column( 5, { page: 'current'} )
+                .data()
+                .reduce( function (a, b) {
+                    return intVal(a) + intVal(b);
+                }, 0 );
+
+            // Update footer
+            $( api.column( 5 ).footer() ).html(
+                '$'+pageTotal +' total'
+            );
+        }
     } );
   } );
   </script>
